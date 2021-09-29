@@ -1,6 +1,6 @@
 part of 'library_generator.dart';
 
-String getBuildFunctionNameFromEnv(String env) => '_buildEnv$env';
+String getBuildFunctionNameFromEnv(String env) => '_buildEnv${env[0].toUpperCase()}${env.substring(1)}';
 
 class AutoInjectLibraryBuilder {
   static final _getItInstanceName = 'getItInstance';
@@ -25,6 +25,18 @@ class AutoInjectLibraryBuilder {
   Iterable<AnnotatedElement> _annotatedWith(TypeChecker checker) =>
       reader.map((e) => e.annotatedWith(checker)).flattened;
 
+  void _addDependencies(Map<String, List<Node>> input) {
+    for (final env in input.entries) {
+      dependencies.putIfAbsent(env.key, () => []).addAll(env.value);
+    }
+  }
+
+  void _addDependency(Map<String, Node> input) {
+    for (final env in input.entries) {
+      dependencies.putIfAbsent(env.key, () => []).add(env.value);
+    }
+  }
+
   void parseModules() {
     for (final moduleElement in _annotatedWith(_moduleTypeChecker)) {
       final result = ModuleParser.parse(libraries, moduleElement);
@@ -38,15 +50,21 @@ class AutoInjectLibraryBuilder {
 
       libraryBuilder.body.addAll([moduleClass, moduleInstance]);
 
-      for (final dependenciesEnv in result.dependencies.entries) {
-        dependencies.putIfAbsent(dependenciesEnv.key, () => []).addAll(dependenciesEnv.value);
-      }
+      _addDependencies(result.dependencies);
+    }
+  }
+
+  void parseClasses() {
+    for (final classElement in _annotatedWith(AnnotationParser.annotationTypeChecker)) {
+      final result = ClassParser.parse(libraries, classElement);
+
+      _addDependency(result);
     }
   }
 
   void buildEnv(String env) {
     final dependencies = this.dependencies[env]!;
-    final sortedDependencies = topologicalSort(dependencies);
+    final sortedDependencies = topologicalSort(dependencies, env);
 
     libraryBuilder.body.add(Method((builder) => builder
       ..name = getBuildFunctionNameFromEnv(env)

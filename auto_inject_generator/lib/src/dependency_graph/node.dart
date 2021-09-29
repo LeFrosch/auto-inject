@@ -3,6 +3,9 @@ import 'package:analyzer/dart/element/type.dart';
 import 'package:auto_inject_generator/src/dependency_graph/sources/dependency_source.dart';
 import 'package:auto_inject_generator/src/parser/parameter_parser.dart';
 import 'package:auto_inject_generator/src/parser/utils.dart';
+import 'package:build/build.dart';
+import 'package:code_builder/code_builder.dart';
+import 'package:collection/collection.dart';
 
 part 'topological_sort.dart';
 

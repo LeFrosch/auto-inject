@@ -11,13 +11,13 @@ enum AnnotationType { injectable, singleton, lazySingleton }
 class AnnotationParserResult {
   final AnnotationType type;
   final List<String> env;
-  final Reference reference;
+  final DartType as;
   final Reference? dispose;
 
   AnnotationParserResult({
     required this.type,
     required this.env,
-    required this.reference,
+    required this.as,
     this.dispose,
   });
 }
@@ -38,15 +38,15 @@ abstract class AnnotationParser {
     final reader = ConstantReader(annotation);
 
     AnnotationType? type;
-    Reference? reference;
+    DartType? as;
     List<String>? env;
     Reference? dispose;
 
     if (_injectableTypeChecker.isAssignableFrom(element)) {
       type = AnnotationType.injectable;
 
-      final referenceValue = reader.read('as');
-      reference = resolveDartType(libraries, referenceValue.isNull ? sourceType : referenceValue.typeValue);
+      final asValue = reader.read('as');
+      as = asValue.isNull ? sourceType : asValue.typeValue;
 
       final envValue = reader.read('env').listValue;
       env = envValue.map((e) => e.toStringValue()!).toList();
@@ -63,14 +63,14 @@ abstract class AnnotationParser {
       type = AnnotationType.lazySingleton;
     }
 
-    if (type == null || reference == null || env == null) {
+    if (type == null || as == null || env == null) {
       throw UnsupportedError('Annotation is neither a injectable, singleton or a lazy singleton');
     }
 
     return AnnotationParserResult(
       type: type,
       env: env,
-      reference: reference,
+      as: as,
       dispose: dispose,
     );
   }
