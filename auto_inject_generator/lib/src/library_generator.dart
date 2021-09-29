@@ -19,8 +19,6 @@ part 'library_builder.dart';
 class AutoInjectLibraryGenerator implements Generator {
   static final _allFilesGlob = Glob("**.dart");
 
-  static final _initChecker = TypeChecker.fromRuntime(AutoInjectInit);
-
   Future<LibraryElement?> _libraryFromAsset(AssetId assetId, Resolver resolver) async {
     try {
       return await resolver.libraryFor(assetId, allowSyntaxErrors: true);
@@ -53,6 +51,8 @@ class AutoInjectLibraryGenerator implements Generator {
       for (final env in builder.dependencies.keys) {
         builder.buildEnv(env);
       }
+
+      builder.buildInitMethod();
     });
 
     return library.accept(DartEmitter.scoped()).toString();

@@ -6,6 +6,10 @@ class AutoInjectLibraryBuilder {
   static final _getItInstanceName = 'getItInstance';
   static final _getItReference = refer('GetIt', 'package:get_it/get_it.dart');
 
+  static final _initMethodName = 'initAutoInject';
+  static final _initGetItName = 'getItInstance';
+  static final _initEnvName = 'environment';
+
   static final _moduleTypeChecker = TypeChecker.fromRuntime(Module);
 
   final LibraryBuilder libraryBuilder;
@@ -72,12 +76,36 @@ class AutoInjectLibraryBuilder {
         ..name = _getItInstanceName
         ..type = _getItReference))
       ..returns = refer('void')
-      ..body = Block((builder) {
-        for (final dependency in sortedDependencies) {
-          builder.statements.add(dependency.source.create(refer(_getItInstanceName)).statement);
-        }
-      })));
+      ..body = Block.of([
+        for (final dependency in sortedDependencies) dependency.source.create(refer(_getItInstanceName)).statement
+      ])));
   }
 
-  void buildInitMethod() {}
+  void buildInitMethod() {
+    libraryBuilder.body.add(Method((builder) => builder
+      ..name = _initMethodName
+      ..requiredParameters.addAll([
+        Parameter((builder) => builder
+          ..name = _initGetItName
+          ..type = _getItReference),
+      ])
+      ..optionalParameters.addAll([
+        Parameter((builder) => builder
+          ..name = _initEnvName
+          ..type = refer('String')
+          ..named = true
+          ..required = true),
+      ])
+      ..returns = refer('void')
+      ..body = Block.of([
+        Code('switch ($_initEnvName) {'),
+        for (final env in dependencies.keys)
+          Block.of([
+            Code('case \'$env\':'),
+            refer(getBuildFunctionNameFromEnv(env)).call([refer(_initGetItName)]).statement,
+            Code('break;'),
+          ]),
+        const Code('}'),
+      ])));
+  }
 }

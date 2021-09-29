@@ -82,7 +82,11 @@ class _ModuleInjectable extends ModuleSource {
 
   @override
   Expression create(Reference getItInstance) {
-    return literalString('injectable');
+    return registerInjectable(
+      getItInstance: getItInstance,
+      type: type,
+      createInstance: createInstance(getItInstance),
+    );
   }
 }
 

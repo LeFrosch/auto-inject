@@ -7,6 +7,16 @@ Expression retrieveFromGetIt({
   return getItInstance.call([], {}, [type]);
 }
 
+Expression registerInjectable({
+  required Reference getItInstance,
+  required Reference type,
+  required Expression createInstance,
+}) {
+  final factoryFunction = Method((b) => b..body = createInstance.code).closure;
+
+  return getItInstance.property('registerFactory').call([factoryFunction], {}, [type]);
+}
+
 Expression registerSingleton({
   required Reference getItInstance,
   required Reference type,

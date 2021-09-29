@@ -1,9 +1,3 @@
-class AutoInjectInit {
-  final String initializerName;
-
-  const AutoInjectInit({required this.initializerName});
-}
-
 class Injectable {
   final Type? as;
 

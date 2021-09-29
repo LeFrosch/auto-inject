@@ -50,8 +50,6 @@ abstract class ClassSource extends DependencySource {
 
     return classType.newInstance(positional, named);
   }
-
-  Expression create(Reference getItInstance);
 }
 
 class _ClassInjectable extends ClassSource {
@@ -67,7 +65,11 @@ class _ClassInjectable extends ClassSource {
 
   @override
   Expression create(Reference getItInstance) {
-    return literalString('injectable');
+    return registerInjectable(
+      getItInstance: getItInstance,
+      type: type,
+      createInstance: createInstance(getItInstance),
+    );
   }
 }
 
