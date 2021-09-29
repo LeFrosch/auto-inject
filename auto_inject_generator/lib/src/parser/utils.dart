@@ -31,9 +31,18 @@ Iterable<Reference> _resolveTypeArguments(List<LibraryElement> libraries, DartTy
   }
 }
 
+int resolveDartTypeToId(List<LibraryElement> libraries, DartType type) {
+  final symbol = resolveDartTypeName(type);
+  final url = resolveImport(libraries, type.element);
+
+  return Object.hash(symbol, url);
+}
+
+String resolveDartTypeName(DartType type) => type.element?.name ?? type.getDisplayString(withNullability: false);
+
 Reference resolveDartType(List<LibraryElement> libraries, DartType type) {
   return TypeReference((builder) => builder
-    ..symbol = type.element?.name ?? type.getDisplayString(withNullability: false)
+    ..symbol = resolveDartTypeName(type)
     ..url = resolveImport(libraries, type.element)
     ..types.addAll(_resolveTypeArguments(libraries, type)));
 }

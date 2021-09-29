@@ -35,6 +35,8 @@ abstract class AnnotationParser {
       throw UnsupportedError('Could not get annotation type element');
     }
 
+    final reader = ConstantReader(annotation);
+
     AnnotationType? type;
     Reference? reference;
     List<String>? env;
@@ -43,18 +45,18 @@ abstract class AnnotationParser {
     if (_injectableTypeChecker.isAssignableFrom(element)) {
       type = AnnotationType.injectable;
 
-      final referenceValue = annotation.getField('as')?.toTypeValue();
-      reference = resolveDartType(libraries, referenceValue ?? sourceType);
+      final referenceValue = reader.read('as');
+      reference = resolveDartType(libraries, referenceValue.isNull ? sourceType : referenceValue.typeValue);
 
-      final envValue = annotation.getField('env')?.toListValue();
-      env = envValue?.map((e) => e.toStringValue()!).toList() ?? const [];
+      final envValue = reader.read('env').listValue;
+      env = envValue.map((e) => e.toStringValue()!).toList();
     }
     if (_singletonTypeChecker.isAssignableFrom(element)) {
       type = AnnotationType.singleton;
 
-      final disposeValue = annotation.getField('dispose')?.toFunctionValue();
-      if (disposeValue != null) {
-        dispose = resolveFunctionType(libraries, disposeValue);
+      final disposeValue = reader.read('dispose');
+      if (!disposeValue.isNull) {
+        dispose = resolveFunctionType(libraries, disposeValue.objectValue.toFunctionValue()!);
       }
     }
     if (_lazySingletonTypeChecker.isAssignableFrom(element)) {

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:auto_inject/auto_inject.dart';
 import 'package:auto_inject_generator/src/dependency_graph/node.dart';
+import 'package:auto_inject_generator/src/dependency_graph/sources/dependency_source.dart';
 import 'package:auto_inject_generator/src/parser/module_parser.dart';
 import 'package:build/build.dart';
 import 'package:build/src/builder/build_step.dart';
@@ -45,6 +46,9 @@ class AutoInjectLibraryGenerator implements Generator {
       );
 
       builder.parseModules();
+      for (final env in builder.dependencies.keys) {
+        builder.buildEnv(env);
+      }
     });
 
     return library.accept(DartEmitter.scoped()).toString();

@@ -2,20 +2,22 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:analyzer/dart/element/visitor.dart';
 import 'package:auto_inject_generator/src/dependency_graph/node.dart';
+import 'package:auto_inject_generator/src/dependency_graph/sources/dependency_source.dart';
 import 'package:auto_inject_generator/src/parser/annotation_parser.dart';
+import 'package:auto_inject_generator/src/parser/parameter_parser.dart';
 import 'package:auto_inject_generator/src/parser/utils.dart';
 import 'package:code_builder/code_builder.dart';
 import 'package:source_gen/source_gen.dart';
 
+part 'module_parser_visitor.dart';
+
 class ModuleParserResult {
   final int id;
-  final String name;
   final Reference reference;
   final Map<String, List<Node>> dependencies;
 
   ModuleParserResult({
     required this.id,
-    required this.name,
     required this.reference,
     required this.dependencies,
   });
@@ -57,29 +59,29 @@ abstract class ModuleParser {
     final visitor = _ModuleVisitor(libraries);
     classElement.visitChildren(visitor);
 
-    print(visitor.results.length);
+    final dependencies = <String, List<Node>>{};
+    for (final result in visitor.results) {
+      for (final env in result.annotation.env) {
+        final envList = dependencies.putIfAbsent(env, () => []);
 
-    return ModuleParserResult(id: id, name: classElement.name, reference: reference, dependencies: {});
-  }
-}
+        final source = ModuleSource.fromAnnotation(
+          moduleId: id,
+          parameter: result.dependencies,
+          type: resolveDartType(libraries, result.type),
+          annotation: result.annotation,
+          access: result.access,
+        );
+        final node = Node.fromTypes(
+          libraries: libraries,
+          dependencies: result.dependencies,
+          type: result.type,
+          source: source,
+        );
 
-class _ModuleVisitor extends SimpleElementVisitor<void> {
-  final List<AnnotationParserResult> results;
-  final List<LibraryElement> libraries;
-
-  _ModuleVisitor(this.libraries) : results = [];
-
-  void _visitElement(DartType sourceType, Element element) {
-    final annotation = AnnotationParser.annotationTypeChecker.firstAnnotationOf(element);
-
-    if (annotation != null) {
-      results.add(AnnotationParser.parse(libraries, sourceType, annotation));
+        envList.add(node);
+      }
     }
+
+    return ModuleParserResult(id: id, reference: reference, dependencies: dependencies);
   }
-
-  @override
-  void visitMethodElement(MethodElement element) => _visitElement(element.returnType, element);
-
-  @override
-  void visitPropertyAccessorElement(PropertyAccessorElement element) => _visitElement(element.returnType, element);
 }
