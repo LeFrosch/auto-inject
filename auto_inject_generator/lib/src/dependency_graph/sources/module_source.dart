@@ -36,6 +36,7 @@ abstract class ModuleSource extends DependencySource {
           parameter: parameter,
           access: access,
           type: type,
+          dispose: annotation.dispose,
         );
       case AnnotationType.lazySingleton:
         return _ModuleLazySingleton(
@@ -43,6 +44,7 @@ abstract class ModuleSource extends DependencySource {
           parameter: parameter,
           access: access,
           type: type,
+          dispose: annotation.dispose,
         );
     }
   }
@@ -91,11 +93,14 @@ class _ModuleInjectable extends ModuleSource {
 }
 
 class _ModuleSingleton extends ModuleSource {
+  final Reference? dispose;
+
   const _ModuleSingleton({
     required int moduleId,
     required List<ParameterParserResult> parameter,
     required ModuleAccess access,
     required Reference type,
+    required this.dispose,
   }) : super(
           moduleId: moduleId,
           parameter: parameter,
@@ -109,16 +114,20 @@ class _ModuleSingleton extends ModuleSource {
       getItInstance: getItInstance,
       type: type,
       createInstance: createInstance(getItInstance),
+      dispose: dispose,
     );
   }
 }
 
 class _ModuleLazySingleton extends ModuleSource {
+  final Reference? dispose;
+
   const _ModuleLazySingleton({
     required int moduleId,
     required List<ParameterParserResult> parameter,
     required ModuleAccess access,
     required Reference type,
+    required this.dispose,
   }) : super(
           moduleId: moduleId,
           parameter: parameter,
@@ -132,6 +141,7 @@ class _ModuleLazySingleton extends ModuleSource {
       getItInstance: getItInstance,
       type: type,
       createInstance: createInstance(getItInstance),
+      dispose: dispose,
     );
   }
 }

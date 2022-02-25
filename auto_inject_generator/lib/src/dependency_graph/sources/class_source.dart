@@ -28,12 +28,14 @@ abstract class ClassSource extends DependencySource {
           parameter: parameter,
           classType: classType,
           type: type,
+          dispose: annotation.dispose,
         );
       case AnnotationType.lazySingleton:
         return _ClassLazySingleton(
           parameter: parameter,
           classType: classType,
           type: type,
+          dispose: annotation.dispose,
         );
     }
   }
@@ -74,10 +76,13 @@ class _ClassInjectable extends ClassSource {
 }
 
 class _ClassSingleton extends ClassSource {
+  final Reference? dispose;
+
   const _ClassSingleton({
     required List<ParameterParserResult> parameter,
     required Reference classType,
     required Reference type,
+    required this.dispose,
   }) : super(
           parameter: parameter,
           classType: classType,
@@ -90,15 +95,19 @@ class _ClassSingleton extends ClassSource {
       getItInstance: getItInstance,
       type: type,
       createInstance: createInstance(getItInstance),
+      dispose: dispose,
     );
   }
 }
 
 class _ClassLazySingleton extends ClassSource {
+  final Reference? dispose;
+
   const _ClassLazySingleton({
     required List<ParameterParserResult> parameter,
     required Reference classType,
     required Reference type,
+    required this.dispose,
   }) : super(
           parameter: parameter,
           classType: classType,
@@ -111,6 +120,7 @@ class _ClassLazySingleton extends ClassSource {
       getItInstance: getItInstance,
       type: type,
       createInstance: createInstance(getItInstance),
+      dispose: dispose,
     );
   }
 }

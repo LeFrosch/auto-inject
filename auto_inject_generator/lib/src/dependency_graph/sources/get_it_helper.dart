@@ -21,16 +21,21 @@ Expression registerSingleton({
   required Reference getItInstance,
   required Reference type,
   required Expression createInstance,
+  required Reference? dispose,
 }) {
-  return getItInstance.property('registerSingleton').call([createInstance], {}, [type]);
+  final namedArgs = {if (dispose != null) 'dispose': dispose};
+
+  return getItInstance.property('registerSingleton').call([createInstance], namedArgs, [type]);
 }
 
 Expression registerLazySingleton({
   required Reference getItInstance,
   required Reference type,
   required Expression createInstance,
+  required Reference? dispose,
 }) {
+  final namedArgs = {if (dispose != null) 'dispose': dispose};
   final factoryFunction = Method((b) => b..body = createInstance.code).closure;
 
-  return getItInstance.property('registerLazySingleton').call([factoryFunction], {}, [type]);
+  return getItInstance.property('registerLazySingleton').call([factoryFunction], namedArgs, [type]);
 }
