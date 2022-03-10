@@ -93,7 +93,7 @@ class _ModuleInjectable extends ModuleSource {
 }
 
 class _ModuleSingleton extends ModuleSource {
-  final Reference? dispose;
+  final DisposeResult? dispose;
 
   const _ModuleSingleton({
     required int moduleId,
@@ -114,13 +114,13 @@ class _ModuleSingleton extends ModuleSource {
       getItInstance: getItInstance,
       type: type,
       createInstance: createInstance(getItInstance),
-      dispose: dispose,
+      dispose: disposeMethodReference(dispose),
     );
   }
 }
 
 class _ModuleLazySingleton extends ModuleSource {
-  final Reference? dispose;
+  final DisposeResult? dispose;
 
   const _ModuleLazySingleton({
     required int moduleId,
@@ -141,7 +141,7 @@ class _ModuleLazySingleton extends ModuleSource {
       getItInstance: getItInstance,
       type: type,
       createInstance: createInstance(getItInstance),
-      dispose: dispose,
+      dispose: disposeMethodReference(dispose),
     );
   }
 }

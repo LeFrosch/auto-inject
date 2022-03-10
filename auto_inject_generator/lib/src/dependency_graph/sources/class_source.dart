@@ -76,7 +76,7 @@ class _ClassInjectable extends ClassSource {
 }
 
 class _ClassSingleton extends ClassSource {
-  final Reference? dispose;
+  final DisposeResult? dispose;
 
   const _ClassSingleton({
     required List<ParameterParserResult> parameter,
@@ -95,13 +95,13 @@ class _ClassSingleton extends ClassSource {
       getItInstance: getItInstance,
       type: type,
       createInstance: createInstance(getItInstance),
-      dispose: dispose,
+      dispose: disposeMethodReference(dispose),
     );
   }
 }
 
 class _ClassLazySingleton extends ClassSource {
-  final Reference? dispose;
+  final DisposeResult? dispose;
 
   const _ClassLazySingleton({
     required List<ParameterParserResult> parameter,
@@ -120,7 +120,7 @@ class _ClassLazySingleton extends ClassSource {
       getItInstance: getItInstance,
       type: type,
       createInstance: createInstance(getItInstance),
-      dispose: dispose,
+      dispose: disposeMethodReference(dispose),
     );
   }
 }

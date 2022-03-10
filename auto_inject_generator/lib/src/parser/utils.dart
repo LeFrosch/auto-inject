@@ -52,7 +52,7 @@ Reference resolveFunctionType(List<LibraryElement> libraries, ExecutableElement 
   Element elementToImport = executableElement;
 
   final enclosingElement = executableElement.enclosingElement;
-  if (enclosingElement is ClassElement) {
+  if (enclosingElement is ClassElement && executableElement.isStatic) {
     displayName = '${enclosingElement.displayName}.$displayName';
     elementToImport = enclosingElement;
   }
