@@ -17,6 +17,7 @@ class AutoInjectLibraryBuilder {
   final List<LibraryElement> libraries;
 
   final Map<String, List<Node>> dependencies;
+  final Map<String, List<Node>> assistedDependencies;
 
   late final MethodBuilder initMethodBuilder;
 
@@ -24,7 +25,8 @@ class AutoInjectLibraryBuilder {
     required this.libraryBuilder,
     required this.reader,
     required this.libraries,
-  }) : dependencies = {};
+  })  : dependencies = {},
+        assistedDependencies = {};
 
   Iterable<AnnotatedElement> _annotatedWith(TypeChecker checker) =>
       reader.map((e) => e.annotatedWith(checker)).flattened;
@@ -38,6 +40,12 @@ class AutoInjectLibraryBuilder {
   void _addDependency(Map<String, Node> input) {
     for (final env in input.entries) {
       dependencies.putIfAbsent(env.key, () => []).add(env.value);
+    }
+  }
+
+  void _addDependencyToAll(Node node) {
+    for (final env in dependencies.keys) {
+      dependencies[env]!.add(node);
     }
   }
 
@@ -59,10 +67,18 @@ class AutoInjectLibraryBuilder {
   }
 
   void parseClasses() {
-    for (final classElement in _annotatedWith(AnnotationParser.annotationTypeChecker)) {
+    for (final classElement in _annotatedWith(AnnotationParser.classAnnotation)) {
       final result = ClassParser.parse(libraries, classElement);
 
       _addDependency(result);
+    }
+  }
+
+  void parseAssistedClasses() {
+    for (final classElement in _annotatedWith(AnnotationParser.assistedClassAnnotation)) {
+      final result = ClassParser.parseAssisted(libraries, classElement);
+
+      _addDependencyToAll(result);
     }
   }
 
@@ -77,7 +93,8 @@ class AutoInjectLibraryBuilder {
         ..type = _getItReference))
       ..returns = refer('void')
       ..body = Block.of([
-        for (final dependency in sortedDependencies) dependency.source.create(refer(_getItInstanceName)).statement
+        for (final source in sortedDependencies.map((e) => e.source).whereNotNull())
+          source.create(refer(_getItInstanceName)).statement
       ])));
   }
 

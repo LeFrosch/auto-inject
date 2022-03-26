@@ -1,7 +1,13 @@
 part of 'node.dart';
 
 String _resolveNode(DartEmitter emitter, int id, List<Node> nodes) {
-  return nodes.firstWhere((node) => node.nodeId == id).source.type.accept(emitter).toString();
+  final source = nodes.firstWhere((node) => node.nodeId == id).source;
+
+  if (source != null) {
+    return source.type.accept(emitter).toString();
+  } else {
+    return 'Unresolvable';
+  }
 }
 
 // source: https://en.wikipedia.org/wiki/Topological_sorting
@@ -43,9 +49,17 @@ List<Node> topologicalSort(List<Node> nodes, String env) {
     final n = s.removeAt(0);
     l.add(n);
 
+    if (n.isLeaf) {
+      for (final m in nodes.where((node) => node.dependencies.contains(n.nodeId))) {
+        throw UnsupportedError('${_resolveNode(DartEmitter(), m.nodeId, nodes)} as a invalid dependency');
+      }
+
+      continue;
+    }
+
     for (final m in nodes.where((node) => node.dependencies.contains(n.nodeId))) {
       if (!m.dependencies.remove(n.nodeId)) {
-        throw StateError('Failed to sort dependencies for $env, no edge found from n to m');
+        throw StateError('Failed to sort dependencies for $env, no edge found from $n to $m');
       }
 
       if (m.dependencies.isEmpty) {

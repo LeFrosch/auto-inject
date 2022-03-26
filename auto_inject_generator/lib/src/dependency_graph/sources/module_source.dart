@@ -23,6 +23,8 @@ abstract class ModuleSource extends DependencySource {
     required AnnotationParserResult annotation,
   }) {
     switch (annotation.type) {
+      case AnnotationType.assisted:
+        throw UnsupportedError('Cannot create a source for a assisted injectable');
       case AnnotationType.injectable:
         return _ModuleInjectable(
           moduleId: moduleId,

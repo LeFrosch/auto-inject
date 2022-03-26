@@ -7,7 +7,7 @@ import 'package:auto_inject_generator/src/parser/utils.dart';
 import 'package:code_builder/code_builder.dart';
 import 'package:source_gen/source_gen.dart';
 
-enum AnnotationType { injectable, singleton, lazySingleton }
+enum AnnotationType { injectable, assisted, singleton, lazySingleton }
 
 class DisposeResult {
   final bool topLevel;
@@ -31,7 +31,10 @@ class AnnotationParserResult {
 }
 
 abstract class AnnotationParser {
-  static final annotationTypeChecker = _injectableTypeChecker;
+  static final classAnnotation = _injectableTypeChecker;
+  static final assistedClassAnnotation = _assistedInjectableTypeChecker;
+
+  static final _assistedInjectableTypeChecker = TypeChecker.fromRuntime(AssistedInjectable);
 
   static final _injectableTypeChecker = TypeChecker.fromRuntime(Injectable);
   static final _singletonTypeChecker = TypeChecker.fromRuntime(Singleton);
@@ -86,9 +89,15 @@ abstract class AnnotationParser {
     if (_lazySingletonTypeChecker.isAssignableFrom(element)) {
       type = AnnotationType.lazySingleton;
     }
+    if (_assistedInjectableTypeChecker.isAssignableFrom(element)) {
+      type = AnnotationType.assisted;
+
+      as = sourceType;
+      env = [];
+    }
 
     if (type == null || as == null || env == null) {
-      throw UnsupportedError('Annotation is neither a injectable, singleton or a lazy singleton');
+      throw UnsupportedError('Annotation is neither a injectable, assisted injectable, singleton or a lazy singleton');
     }
 
     return AnnotationParserResult(

@@ -38,7 +38,7 @@ class _ModuleVisitor extends SimpleElementVisitor<void> {
     required Element element,
     required ModuleAccess access,
   }) {
-    final annotation = AnnotationParser.annotationTypeChecker.firstAnnotationOf(element);
+    final annotation = AnnotationParser.classAnnotation.firstAnnotationOf(element);
 
     if (annotation != null) {
       final result = _ModuleVisitorResult(

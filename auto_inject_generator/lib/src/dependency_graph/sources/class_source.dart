@@ -17,6 +17,8 @@ abstract class ClassSource extends DependencySource {
     required AnnotationParserResult annotation,
   }) {
     switch (annotation.type) {
+      case AnnotationType.assisted:
+        throw UnsupportedError('Cannot create a source for a assisted injectable');
       case AnnotationType.injectable:
         return _ClassInjectable(
           parameter: parameter,
