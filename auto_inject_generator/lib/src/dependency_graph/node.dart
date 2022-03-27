@@ -13,7 +13,7 @@ class Node {
   final int nodeId;
 
   final List<int> dependencies;
-  final DependencySource? source;
+  final DependencySource source;
 
   Node({
     required this.nodeId,
@@ -21,13 +21,13 @@ class Node {
     required this.source,
   });
 
-  bool get isLeaf => source == null;
+  bool get isLeaf => source.canSupply;
 
   factory Node.fromTypes({
     required List<LibraryElement> libraries,
     required List<ParameterParserResult> dependencies,
     required DartType type,
-    required DependencySource? source,
+    required DependencySource source,
   }) {
     return Node(
       source: source,

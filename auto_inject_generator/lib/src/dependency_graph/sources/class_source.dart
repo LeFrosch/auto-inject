@@ -17,10 +17,14 @@ abstract class ClassSource extends DependencySource {
     required AnnotationParserResult annotation,
   }) {
     switch (annotation.type) {
-      case AnnotationType.assisted:
-        throw UnsupportedError('Cannot create a source for a assisted injectable');
       case AnnotationType.injectable:
         return _ClassInjectable(
+          parameter: parameter,
+          classType: classType,
+          type: type,
+        );
+      case AnnotationType.assisted:
+        return _ClassAssistedInjectable(
           parameter: parameter,
           classType: classType,
           type: type,
@@ -74,6 +78,23 @@ class _ClassInjectable extends ClassSource {
       type: type,
       createInstance: createInstance(getItInstance),
     );
+  }
+}
+
+class _ClassAssistedInjectable extends ClassSource with AssistedDependency {
+  const _ClassAssistedInjectable({
+    required List<ParameterParserResult> parameter,
+    required Reference classType,
+    required Reference type,
+  }) : super(
+          parameter: parameter,
+          classType: classType,
+          type: type,
+        );
+
+  @override
+  Expression create(Reference getItInstance) {
+    throw UnimplementedError();
   }
 }
 

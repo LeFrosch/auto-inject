@@ -32,11 +32,9 @@ class AnnotationParserResult {
 
 abstract class AnnotationParser {
   static final classAnnotation = _injectableTypeChecker;
-  static final assistedClassAnnotation = _assistedInjectableTypeChecker;
-
-  static final _assistedInjectableTypeChecker = TypeChecker.fromRuntime(AssistedInjectable);
 
   static final _injectableTypeChecker = TypeChecker.fromRuntime(Injectable);
+  static final _assistedInjectableTypeChecker = TypeChecker.fromRuntime(AssistedInjectable);
   static final _singletonTypeChecker = TypeChecker.fromRuntime(Singleton);
   static final _lazySingletonTypeChecker = TypeChecker.fromRuntime(LazySingleton);
 
@@ -91,9 +89,6 @@ abstract class AnnotationParser {
     }
     if (_assistedInjectableTypeChecker.isAssignableFrom(element)) {
       type = AnnotationType.assisted;
-
-      as = sourceType;
-      env = [];
     }
 
     if (type == null || as == null || env == null) {

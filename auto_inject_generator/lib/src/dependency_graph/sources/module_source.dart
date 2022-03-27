@@ -23,10 +23,15 @@ abstract class ModuleSource extends DependencySource {
     required AnnotationParserResult annotation,
   }) {
     switch (annotation.type) {
-      case AnnotationType.assisted:
-        throw UnsupportedError('Cannot create a source for a assisted injectable');
       case AnnotationType.injectable:
         return _ModuleInjectable(
+          moduleId: moduleId,
+          parameter: parameter,
+          access: access,
+          type: type,
+        );
+      case AnnotationType.assisted:
+        return _ModuleAssistedInjectable(
           moduleId: moduleId,
           parameter: parameter,
           access: access,
@@ -91,6 +96,25 @@ class _ModuleInjectable extends ModuleSource {
       type: type,
       createInstance: createInstance(getItInstance),
     );
+  }
+}
+
+class _ModuleAssistedInjectable extends ModuleSource with AssistedDependency {
+  const _ModuleAssistedInjectable({
+    required int moduleId,
+    required List<ParameterParserResult> parameter,
+    required ModuleAccess access,
+    required Reference type,
+  }) : super(
+          moduleId: moduleId,
+          parameter: parameter,
+          access: access,
+          type: type,
+        );
+
+  @override
+  Expression create(Reference getItInstance) {
+    throw UnimplementedError();
   }
 }
 

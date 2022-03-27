@@ -11,6 +11,7 @@ class AutoInjectLibraryBuilder {
   static final _initEnvName = 'environment';
 
   static final _moduleTypeChecker = TypeChecker.fromRuntime(Module);
+  static final _factoryTypeChecker = TypeChecker.fromRuntime(AssistedFactory);
 
   final LibraryBuilder libraryBuilder;
   final List<LibraryReader> reader;
@@ -43,12 +44,6 @@ class AutoInjectLibraryBuilder {
     }
   }
 
-  void _addDependencyToAll(Node node) {
-    for (final env in dependencies.keys) {
-      dependencies[env]!.add(node);
-    }
-  }
-
   void parseModules() {
     for (final moduleElement in _annotatedWith(_moduleTypeChecker)) {
       final result = ModuleParser.parse(libraries, moduleElement);
@@ -66,19 +61,17 @@ class AutoInjectLibraryBuilder {
     }
   }
 
+  void parseFactories() {
+    for (final factoryElement in _annotatedWith(_factoryTypeChecker)) {
+      final result = FactoryParser.parse(libraries, factoryElement);
+    }
+  }
+
   void parseClasses() {
     for (final classElement in _annotatedWith(AnnotationParser.classAnnotation)) {
       final result = ClassParser.parse(libraries, classElement);
 
       _addDependency(result);
-    }
-  }
-
-  void parseAssistedClasses() {
-    for (final classElement in _annotatedWith(AnnotationParser.assistedClassAnnotation)) {
-      final result = ClassParser.parseAssisted(libraries, classElement);
-
-      _addDependencyToAll(result);
     }
   }
 

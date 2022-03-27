@@ -4,7 +4,7 @@ import 'package:auto_inject_generator/src/dependency_graph/sources/dependency_so
 import 'package:auto_inject_generator/src/parser/annotation_parser.dart';
 import 'package:auto_inject_generator/src/parser/parameter_parser.dart';
 import 'package:auto_inject_generator/src/parser/utils.dart';
-import 'package:build/build.dart';
+import 'package:collection/collection.dart';
 import 'package:source_gen/source_gen.dart';
 
 ClassElement _parseClassElement(List<LibraryElement> libraries, AnnotatedElement annotation) {
@@ -48,17 +48,13 @@ abstract class ClassParser {
       annotation.annotation.objectValue,
     );
 
-    final parameter = constructor.parameters.map((dependency) => ParameterParser.parse(libraries, dependency)).toList();
-    if (parameter.any((e) => e.assisted)) {
-      throw UnsupportedError('Assisted arguments are only support with assisted injection');
-    }
-
+    final parameter = constructor.parameters.map((e) => ParameterParser.parse(libraries, e)).toList();
     final type = annotationResult.as;
 
     final dependencies = <String, Node>{};
     for (final env in annotationResult.env) {
       final source = ClassSource.fromAnnotation(
-        parameter: parameter,
+        parameter: parameter.whereNot((e) => e.assisted).toList(),
         type: resolveDartType(libraries, type),
         classType: resolveDartType(libraries, classElement.thisType),
         annotation: annotationResult,
@@ -74,28 +70,5 @@ abstract class ClassParser {
     }
 
     return dependencies;
-  }
-
-  static Node parseAssisted(List<LibraryElement> libraries, AnnotatedElement annotation) {
-    final classElement = _parseClassElement(libraries, annotation);
-    final constructor = _parseConstructor(classElement);
-
-    final annotationResult = AnnotationParser.parse(
-      libraries,
-      classElement.thisType,
-      annotation.annotation.objectValue,
-    );
-
-    final parameter = constructor.parameters.map((dependency) => ParameterParser.parse(libraries, dependency)).toList();
-    if (!parameter.any((e) => e.assisted)) {
-      log.warning('${classElement.name} has no assisted arguments, assisted injection is unnecessary');
-    }
-
-    return Node.fromTypes(
-      libraries: libraries,
-      dependencies: parameter,
-      type: annotationResult.as,
-      source: null,
-    );
   }
 }

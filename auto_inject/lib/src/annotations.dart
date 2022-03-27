@@ -6,8 +6,8 @@ class Injectable {
   const Injectable({this.as, required this.env});
 }
 
-class AssistedInjectable {
-  const AssistedInjectable();
+class AssistedInjectable extends Injectable {
+  const AssistedInjectable({Type? as, required List<String> env}) : super(as: as, env: env);
 }
 
 class Singleton extends Injectable {
@@ -27,6 +27,12 @@ class Module {
 
 const module = Module._();
 
+class AssistedFactory {
+  const AssistedFactory._();
+}
+
+const assistedFactory = AssistedFactory._();
+
 class DisposeMethod {
   const DisposeMethod._();
 }
@@ -34,7 +40,9 @@ class DisposeMethod {
 const disposeMethod = DisposeMethod._();
 
 class Assisted {
-  const Assisted._();
+  final String? name;
+
+  const Assisted([this.name]);
 }
 
-const assisted = Assisted._();
+const assisted = Assisted();

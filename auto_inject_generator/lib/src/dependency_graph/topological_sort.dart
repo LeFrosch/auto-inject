@@ -3,11 +3,7 @@ part of 'node.dart';
 String _resolveNode(DartEmitter emitter, int id, List<Node> nodes) {
   final source = nodes.firstWhere((node) => node.nodeId == id).source;
 
-  if (source != null) {
-    return source.type.accept(emitter).toString();
-  } else {
-    return 'Unresolvable';
-  }
+  return source.type.accept(emitter).toString();
 }
 
 // source: https://en.wikipedia.org/wiki/Topological_sorting
