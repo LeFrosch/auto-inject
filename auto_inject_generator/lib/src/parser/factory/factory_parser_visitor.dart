@@ -2,12 +2,14 @@ part of 'factory_parser.dart';
 
 class FactoryFunction {
   final List<ParameterParserResult> parameters;
-  final DartType type;
+  final Reference returnType;
+  final String name;
   final int id;
 
   FactoryFunction({
     required this.parameters,
-    required this.type,
+    required this.returnType,
+    required this.name,
     required this.id,
   });
 }
@@ -27,7 +29,8 @@ class _FactoryVisitor extends SimpleElementVisitor<void> {
 
     final result = FactoryFunction(
       parameters: element.parameters.map((e) => ParameterParser.parse(libraries, e)).toList(),
-      type: element.returnType,
+      returnType: resolveDartType(libraries, element.returnType),
+      name: element.name,
       id: resolveDartTypeToId(libraries, element.returnType),
     );
 

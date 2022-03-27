@@ -53,7 +53,7 @@ abstract class ClassSource extends DependencySource {
 
     final named = {
       for (final param in parameter.where((p) => p.named))
-        param.name!: retrieveFromGetIt(getItInstance: getItInstance, type: param.reference)
+        param.name: retrieveFromGetIt(getItInstance: getItInstance, type: param.reference)
     };
 
     return classType.newInstance(positional, named);
@@ -94,7 +94,18 @@ class _ClassAssistedInjectable extends ClassSource with AssistedDependency {
 
   @override
   Expression create(Reference getItInstance) {
-    throw UnimplementedError();
+    final positional = parameter
+        .where((e) => !e.named && !e.assisted)
+        .map((e) => retrieveFromGetIt(getItInstance: getItInstance, type: e.reference))
+        .followedBy(parameter.where((e) => !e.named && e.assisted).map((e) => refer(e.name)));
+
+    final named = {
+      for (final param in parameter.where((e) => e.named && !e.assisted))
+        param.name: retrieveFromGetIt(getItInstance: getItInstance, type: param.reference),
+      for (final param in parameter.where((e) => e.named && e.assisted)) param.name: refer(param.name),
+    };
+
+    return classType.newInstance(positional, named);
   }
 }
 

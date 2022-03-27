@@ -5,6 +5,7 @@ import 'package:code_builder/code_builder.dart';
 import 'package:meta/meta.dart';
 
 import '../../parser/module/module_parser.dart';
+import '../node.dart';
 
 part 'class_source.dart';
 part 'module_source.dart';
@@ -22,4 +23,6 @@ abstract class DependencySource {
   bool get canSupply => true;
 
   Expression create(Reference getItInstance);
+
+  Iterable<Spec> createGlobal(Iterable<Node> dependencies) => const [];
 }

@@ -54,14 +54,14 @@ abstract class ClassParser {
     final dependencies = <String, Node>{};
     for (final env in annotationResult.env) {
       final source = ClassSource.fromAnnotation(
-        parameter: parameter.whereNot((e) => e.assisted).toList(),
+        parameter: parameter,
         type: resolveDartType(libraries, type),
         classType: resolveDartType(libraries, classElement.thisType),
         annotation: annotationResult,
       );
       final node = Node.fromTypes(
         libraries: libraries,
-        dependencies: parameter,
+        dependencies: parameter.whereNot((e) => e.assisted).toList(),
         type: type,
         source: source,
       );

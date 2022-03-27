@@ -8,7 +8,8 @@ import 'package:source_gen/source_gen.dart';
 class ParameterParserResult {
   final DartType type;
   final Reference reference;
-  final String? name;
+  final String name;
+  final bool named;
   final bool defaultDependency;
   final bool assisted;
 
@@ -16,11 +17,10 @@ class ParameterParserResult {
     required this.type,
     required this.reference,
     required this.name,
+    required this.named,
     required this.defaultDependency,
     required this.assisted,
   });
-
-  bool get named => name != null;
 }
 
 abstract class ParameterParser {
@@ -34,7 +34,8 @@ abstract class ParameterParser {
     return ParameterParserResult(
       type: parameter.type,
       reference: resolveDartType(libraries, parameter.type),
-      name: parameter.isNamed ? parameter.name : null,
+      name: parameter.name,
+      named: parameter.isNamed,
       defaultDependency: _defaultDependencies.any((typeChecker) => typeChecker.isExactlyType(parameter.type)),
       assisted: _assistedAnnotation.hasAnnotationOf(parameter, throwOnUnresolved: false),
     );

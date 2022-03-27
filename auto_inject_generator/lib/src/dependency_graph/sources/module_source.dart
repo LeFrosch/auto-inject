@@ -58,21 +58,20 @@ abstract class ModuleSource extends DependencySource {
 
   @protected
   Expression createInstance(Reference getItInstance) {
+    final instanceName = moduleInstanceNameFromId(moduleId);
+    if (access.type == ModuleAccessType.property) {
+      return refer(instanceName).property(access.name);
+    }
+
     final positional =
         parameter.where((p) => !p.named).map((e) => retrieveFromGetIt(getItInstance: getItInstance, type: e.reference));
 
     final named = {
       for (final param in parameter.where((p) => p.named))
-        param.name!: retrieveFromGetIt(getItInstance: getItInstance, type: param.reference)
+        param.name: retrieveFromGetIt(getItInstance: getItInstance, type: param.reference)
     };
 
-    final instanceName = moduleInstanceNameFromId(moduleId);
-    switch (access.type) {
-      case ModuleAccessType.method:
-        return refer(instanceName).property(access.name).call(positional, named);
-      case ModuleAccessType.property:
-        return refer(instanceName).property(access.name);
-    }
+    return refer(instanceName).property(access.name).call(positional, named);
   }
 }
 
@@ -114,7 +113,23 @@ class _ModuleAssistedInjectable extends ModuleSource with AssistedDependency {
 
   @override
   Expression create(Reference getItInstance) {
-    throw UnimplementedError();
+    final instanceName = moduleInstanceNameFromId(moduleId);
+    if (access.type == ModuleAccessType.property) {
+      return refer(instanceName).property(access.name);
+    }
+
+    final positional = parameter
+        .where((e) => !e.named && !e.assisted)
+        .map((e) => retrieveFromGetIt(getItInstance: getItInstance, type: e.reference))
+        .followedBy(parameter.where((e) => !e.named && e.assisted).map((e) => refer(e.name)));
+
+    final named = {
+      for (final param in parameter.where((e) => e.named && !e.assisted))
+        param.name: retrieveFromGetIt(getItInstance: getItInstance, type: param.reference),
+      for (final param in parameter.where((e) => e.named && e.assisted)) param.name: refer(param.name),
+    };
+
+    return refer(instanceName).property(access.name).call(positional, named);
   }
 }
 

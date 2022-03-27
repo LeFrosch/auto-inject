@@ -21,7 +21,7 @@ class Node {
     required this.source,
   });
 
-  bool get isLeaf => source.canSupply;
+  bool get isLeaf => !source.canSupply;
 
   factory Node.fromTypes({
     required List<LibraryElement> libraries,

@@ -1,10 +1,11 @@
 part of 'library_generator.dart';
 
+Reference getItReference() => refer('GetIt', 'package:get_it/get_it.dart');
+
 String getBuildFunctionNameFromEnv(String env) => '_buildEnv${env[0].toUpperCase()}${env.substring(1)}';
 
 class AutoInjectLibraryBuilder {
   static final _getItInstanceName = 'getItInstance';
-  static final _getItReference = refer('GetIt', 'package:get_it/get_it.dart');
 
   static final _initMethodName = 'initAutoInject';
   static final _initGetItName = 'getItInstance';
@@ -50,9 +51,11 @@ class AutoInjectLibraryBuilder {
       final className = moduleClassNameFromId(result.id);
       final instanceName = moduleInstanceNameFromId(result.id);
 
-      final moduleClass = Class((builder) => builder
-        ..name = className
-        ..extend = result.reference);
+      final moduleClass = Class(
+        (builder) => builder
+          ..name = className
+          ..extend = result.reference,
+      );
       final moduleInstance = refer(className).newInstance([]).assignFinal(instanceName).statement;
 
       libraryBuilder.body.addAll([moduleClass, moduleInstance]);
@@ -63,7 +66,19 @@ class AutoInjectLibraryBuilder {
 
   void parseFactories() {
     for (final factoryElement in _annotatedWith(_factoryTypeChecker)) {
+      print(factoryElement.element.name);
       final result = FactoryParser.parse(libraries, factoryElement);
+
+      for (final env in dependencies.keys) {
+        final source = FactorySource(result, env);
+
+        dependencies[env]!.add(Node.fromTypes(
+          libraries: libraries,
+          dependencies: [],
+          type: result.type,
+          source: source,
+        ));
+      }
     }
   }
 
@@ -77,18 +92,21 @@ class AutoInjectLibraryBuilder {
 
   void buildEnv(String env) {
     final dependencies = this.dependencies[env]!;
+    for (final dependency in dependencies) {
+      libraryBuilder.body.addAll(dependency.source.createGlobal(dependencies.whereNot((e) => e == dependency)));
+    }
+
     final sortedDependencies = topologicalSort(dependencies, env);
 
-    libraryBuilder.body.add(Method((builder) => builder
-      ..name = getBuildFunctionNameFromEnv(env)
-      ..requiredParameters.add(Parameter((builder) => builder
-        ..name = _getItInstanceName
-        ..type = _getItReference))
-      ..returns = refer('void')
-      ..body = Block.of([
-        for (final source in sortedDependencies.map((e) => e.source).whereNotNull())
-          source.create(refer(_getItInstanceName)).statement
-      ])));
+    libraryBuilder.body.add(Method(
+      (builder) => builder
+        ..name = getBuildFunctionNameFromEnv(env)
+        ..requiredParameters.add(Parameter((builder) => builder
+          ..name = _getItInstanceName
+          ..type = getItReference()))
+        ..returns = refer('void')
+        ..body = Block.of(sortedDependencies.map((e) => e.source.create(refer(_getItInstanceName)).statement)),
+    ));
   }
 
   void buildInitMethod() {
@@ -97,7 +115,7 @@ class AutoInjectLibraryBuilder {
       ..requiredParameters.addAll([
         Parameter((builder) => builder
           ..name = _initGetItName
-          ..type = _getItReference),
+          ..type = getItReference()),
       ])
       ..optionalParameters.addAll([
         Parameter((builder) => builder

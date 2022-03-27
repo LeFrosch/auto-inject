@@ -47,7 +47,9 @@ List<Node> topologicalSort(List<Node> nodes, String env) {
 
     if (n.isLeaf) {
       for (final m in nodes.where((node) => node.dependencies.contains(n.nodeId))) {
-        throw UnsupportedError('${_resolveNode(DartEmitter(), m.nodeId, nodes)} as a invalid dependency');
+        throw UnsupportedError(
+          '${_resolveNode(DartEmitter(), m.nodeId, nodes)} has a invalid dependency (${_resolveNode(DartEmitter(), n.nodeId, nodes)})',
+        );
       }
 
       continue;

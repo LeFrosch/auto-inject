@@ -12,11 +12,13 @@ part 'factory_parser_visitor.dart';
 class FactoryParserResult {
   final int id;
   final Reference reference;
+  final DartType type;
   final List<FactoryFunction> functions;
 
   FactoryParserResult({
     required this.id,
     required this.reference,
+    required this.type,
     required this.functions,
   });
 }
@@ -58,6 +60,7 @@ abstract class FactoryParser {
     return FactoryParserResult(
       id: id,
       reference: reference,
+      type: classElement.thisType,
       functions: visitor.results,
     );
   }
