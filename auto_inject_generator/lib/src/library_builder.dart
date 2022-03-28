@@ -66,7 +66,6 @@ class AutoInjectLibraryBuilder {
 
   void parseFactories() {
     for (final factoryElement in _annotatedWith(_factoryTypeChecker)) {
-      print(factoryElement.element.name);
       final result = FactoryParser.parse(libraries, factoryElement);
 
       for (final env in dependencies.keys) {
@@ -105,7 +104,9 @@ class AutoInjectLibraryBuilder {
           ..name = _getItInstanceName
           ..type = getItReference()))
         ..returns = refer('void')
-        ..body = Block.of(sortedDependencies.map((e) => e.source.create(refer(_getItInstanceName)).statement)),
+        ..body = Block.of(sortedDependencies
+            .where((e) => e.source.canSupply)
+            .map((e) => e.source.create(refer(_getItInstanceName)).statement)),
     ));
   }
 

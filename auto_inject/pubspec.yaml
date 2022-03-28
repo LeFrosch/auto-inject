@@ -2,7 +2,7 @@ name: auto_inject
 description: Provides annotations for the auto inject code generation.
 homepage: https://github.com/LeFrosch/auto-inject
 
-version: '0.0.2'
+version: '0.0.3'
 
 publish_to: none
 
