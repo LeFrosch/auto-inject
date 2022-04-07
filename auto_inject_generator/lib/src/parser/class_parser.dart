@@ -4,7 +4,6 @@ import 'package:auto_inject_generator/src/dependency_graph/sources/dependency_so
 import 'package:auto_inject_generator/src/parser/annotation_parser.dart';
 import 'package:auto_inject_generator/src/parser/parameter_parser.dart';
 import 'package:auto_inject_generator/src/parser/utils.dart';
-import 'package:collection/collection.dart';
 import 'package:source_gen/source_gen.dart';
 
 ClassElement _parseClassElement(List<LibraryElement> libraries, AnnotatedElement annotation) {
@@ -48,20 +47,21 @@ abstract class ClassParser {
       annotation.annotation.objectValue,
     );
 
-    final parameter = constructor.parameters.map((e) => ParameterParser.parse(libraries, e)).toList();
+    final parameters = constructor.parameters.map((e) => ParameterParser.parse(libraries, e)).toList();
     final type = annotationResult.as;
 
     final dependencies = <String, Node>{};
     for (final env in annotationResult.env) {
       final source = ClassSource.fromAnnotation(
-        parameter: parameter,
+        parameter: parameters,
         type: resolveDartType(libraries, type),
         classType: resolveDartType(libraries, classElement.thisType),
         annotation: annotationResult,
       );
       final node = Node.fromTypes(
         libraries: libraries,
-        dependencies: parameter.whereNot((e) => e.assisted).toList(),
+        parameters: parameters,
+        groups: annotationResult.groups,
         type: type,
         source: source,
       );

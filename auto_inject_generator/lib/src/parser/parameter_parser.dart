@@ -12,6 +12,7 @@ class ParameterParserResult {
   final bool named;
   final bool defaultDependency;
   final bool assisted;
+  final bool group;
 
   ParameterParserResult({
     required this.type,
@@ -20,24 +21,48 @@ class ParameterParserResult {
     required this.named,
     required this.defaultDependency,
     required this.assisted,
+    required this.group,
   });
 }
 
 abstract class ParameterParser {
   static final _assistedAnnotation = TypeChecker.fromRuntime(Assisted);
+  static final _groupAnnotation = TypeChecker.fromRuntime(Group);
+  static final _iterableAnnotation = TypeChecker.fromRuntime(Iterable);
 
   static final _defaultDependencies = [
     TypeChecker.fromUrl('getIt:getIt#GetIt'),
   ];
 
   static ParameterParserResult parse(List<LibraryElement> libraries, ParameterElement parameter) {
-    return ParameterParserResult(
-      type: parameter.type,
-      reference: resolveDartType(libraries, parameter.type),
-      name: parameter.name,
-      named: parameter.isNamed,
-      defaultDependency: _defaultDependencies.any((typeChecker) => typeChecker.isExactlyType(parameter.type)),
-      assisted: _assistedAnnotation.hasAnnotationOf(parameter, throwOnUnresolved: false),
-    );
+    if (_groupAnnotation.hasAnnotationOf(parameter, throwOnUnresolved: false)) {
+      final type = parameter.type;
+
+      if (!_iterableAnnotation.isExactlyType(type) || type is! ParameterizedType) {
+        throw UnsupportedError('Groups must be an Iterable<T>');
+      }
+
+      final groupType = type.typeArguments[0];
+
+      return ParameterParserResult(
+        type: groupType,
+        reference: resolveDartType(libraries, type),
+        name: parameter.name,
+        named: parameter.isNamed,
+        defaultDependency: false,
+        assisted: false,
+        group: true,
+      );
+    } else {
+      return ParameterParserResult(
+        type: parameter.type,
+        reference: resolveDartType(libraries, parameter.type),
+        name: parameter.name,
+        named: parameter.isNamed,
+        defaultDependency: _defaultDependencies.any((typeChecker) => typeChecker.isExactlyType(parameter.type)),
+        assisted: _assistedAnnotation.hasAnnotationOf(parameter, throwOnUnresolved: false),
+        group: false,
+      );
+    }
   }
 }

@@ -15,6 +15,7 @@ dependencies:
   code_builder: ^4.1.0
   source_gen: ^1.1.1
   glob: ^2.0.1
+  equatable: ^2.0.3
   
   auto_inject: 
     git:

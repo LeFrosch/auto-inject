@@ -1,5 +1,13 @@
 part of 'node.dart';
 
+class _TopologicalNode {
+  final List<int> dependencies;
+  final int nodeId;
+  final bool isLeaf;
+
+  _TopologicalNode(this.dependencies, this.nodeId, this.isLeaf);
+}
+
 String _resolveNode(DartEmitter emitter, int id, List<Node> nodes) {
   final source = nodes.firstWhere((node) => node.nodeId == id).source;
 
@@ -8,11 +16,22 @@ String _resolveNode(DartEmitter emitter, int id, List<Node> nodes) {
 
 // source: https://en.wikipedia.org/wiki/Topological_sorting
 List<Node> topologicalSort(List<Node> nodes, String env) {
+  final topologicalNodes = nodes
+      .map((e) => _TopologicalNode(
+            [
+              ...e.dependencies,
+              ...nodes.where((n) => e.groupDependencies.any((g) => n.groupIds.contains(g))).map((e) => e.nodeId),
+            ],
+            e.nodeId,
+            e.isLeaf,
+          ))
+      .toList();
+
   // remove unresolvable dependencies
   final removedDependencies = <int, List<int>>{};
-  for (final node in nodes) {
+  for (final node in topologicalNodes) {
     node.dependencies.removeWhere((id) {
-      final notFound = nodes.none((node) => node.nodeId == id);
+      final notFound = topologicalNodes.none((node) => node.nodeId == id);
 
       if (notFound) {
         removedDependencies.putIfAbsent(node.nodeId, () => []).add(id);
@@ -34,8 +53,8 @@ List<Node> topologicalSort(List<Node> nodes, String env) {
     log.warning(buffer);
   }
 
-  final l = <Node>[];
-  final s = nodes.where((node) => node.dependencies.isEmpty).toList();
+  final l = <_TopologicalNode>[];
+  final s = topologicalNodes.where((e) => e.dependencies.isEmpty).toList();
 
   if (s.isEmpty) {
     throw UnsupportedError('No node without dependencies found for $env, do you have a circle in your dependencies?');
@@ -46,7 +65,7 @@ List<Node> topologicalSort(List<Node> nodes, String env) {
     l.add(n);
 
     if (n.isLeaf) {
-      for (final m in nodes.where((node) => node.dependencies.contains(n.nodeId))) {
+      for (final m in topologicalNodes.where((e) => e.dependencies.contains(n.nodeId))) {
         throw UnsupportedError(
           '${_resolveNode(DartEmitter(), m.nodeId, nodes)} has a invalid dependency (${_resolveNode(DartEmitter(), n.nodeId, nodes)})',
         );
@@ -55,7 +74,7 @@ List<Node> topologicalSort(List<Node> nodes, String env) {
       continue;
     }
 
-    for (final m in nodes.where((node) => node.dependencies.contains(n.nodeId))) {
+    for (final m in topologicalNodes.where((e) => e.dependencies.contains(n.nodeId))) {
       if (!m.dependencies.remove(n.nodeId)) {
         throw StateError('Failed to sort dependencies for $env, no edge found from $n to $m');
       }
@@ -66,9 +85,22 @@ List<Node> topologicalSort(List<Node> nodes, String env) {
     }
   }
 
-  if (nodes.any((node) => node.dependencies.isNotEmpty)) {
-    throw StateError('Could not satisfy all dependency for $env, this maybe due to circles in your dependencies.');
+  if (topologicalNodes.any((e) => e.dependencies.isNotEmpty)) {
+    final emitter = DartEmitter();
+    final buffer = StringBuffer();
+
+    buffer.writeln(
+      'Could not satisfy all dependency for $env this maybe due to circles in your dependencies. The following dependencies are effected:\n',
+    );
+
+    for (final node in topologicalNodes.where((e) => e.dependencies.isNotEmpty)) {
+      buffer.write('${_resolveNode(emitter, node.nodeId, nodes)} misses: [');
+      buffer.write(node.dependencies.map((e) => _resolveNode(emitter, e, nodes)).join(', '));
+      buffer.write(']\n');
+    }
+
+    throw StateError(buffer.toString());
   }
 
-  return l;
+  return l.map((e) => nodes.firstWhere((n) => n.nodeId == e.nodeId)).toList();
 }

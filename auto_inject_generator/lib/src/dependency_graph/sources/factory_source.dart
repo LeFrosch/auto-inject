@@ -1,12 +1,4 @@
-import 'package:auto_inject_generator/src/dependency_graph/sources/dependency_source.dart';
-import 'package:auto_inject_generator/src/dependency_graph/sources/get_it_helper.dart';
-import 'package:auto_inject_generator/src/library_generator.dart';
-import 'package:auto_inject_generator/src/parser/factory/factory_parser.dart';
-import 'package:build/build.dart';
-import 'package:code_builder/code_builder.dart';
-import 'package:collection/collection.dart';
-
-import '../node.dart';
+part of 'dependency_source.dart';
 
 class FactorySource extends DependencySource {
   static final _getItInstanceName = '_getInstance';

@@ -4,11 +4,11 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:auto_inject/auto_inject.dart';
 import 'package:auto_inject_generator/src/dependency_graph/node.dart';
 import 'package:auto_inject_generator/src/dependency_graph/sources/dependency_source.dart';
-import 'package:auto_inject_generator/src/dependency_graph/sources/factory_source.dart';
 import 'package:auto_inject_generator/src/parser/annotation_parser.dart';
 import 'package:auto_inject_generator/src/parser/class_parser.dart';
 import 'package:auto_inject_generator/src/parser/factory/factory_parser.dart';
 import 'package:auto_inject_generator/src/parser/module/module_parser.dart';
+import 'package:auto_inject_generator/src/parser/utils.dart';
 import 'package:build/build.dart';
 import 'package:code_builder/code_builder.dart';
 import 'package:collection/collection.dart';
@@ -49,6 +49,7 @@ class AutoInjectLibraryGenerator implements Generator {
       builder.parseModules();
       builder.parseClasses();
       builder.parseFactories();
+      builder.parseGroups();
 
       for (final env in builder.dependencies.keys) {
         builder.buildEnv(env);

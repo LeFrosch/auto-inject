@@ -19,6 +19,7 @@ class DisposeResult {
 class AnnotationParserResult {
   final AnnotationType type;
   final List<String> env;
+  final List<DartType> groups;
   final DartType as;
   final DisposeResult? dispose;
 
@@ -26,6 +27,7 @@ class AnnotationParserResult {
     required this.type,
     required this.env,
     required this.as,
+    required this.groups,
     this.dispose,
   });
 }
@@ -49,6 +51,7 @@ abstract class AnnotationParser {
     AnnotationType? type;
     DartType? as;
     List<String>? env;
+    List<DartType>? group;
     DisposeResult? dispose;
 
     if (_injectableTypeChecker.isAssignableFrom(element)) {
@@ -59,6 +62,9 @@ abstract class AnnotationParser {
 
       final envValue = reader.read('env').listValue;
       env = envValue.map((e) => e.toStringValue()!).toList();
+
+      final groupValue = reader.read('group').listValue;
+      group = groupValue.map((e) => e.toTypeValue()!).toList();
     }
     if (_singletonTypeChecker.isAssignableFrom(element)) {
       type = AnnotationType.singleton;
@@ -91,13 +97,14 @@ abstract class AnnotationParser {
       type = AnnotationType.assisted;
     }
 
-    if (type == null || as == null || env == null) {
+    if (type == null || as == null || env == null || group == null) {
       throw UnsupportedError('Annotation is neither a injectable, assisted injectable, singleton or a lazy singleton');
     }
 
     return AnnotationParserResult(
       type: type,
       env: env,
+      groups: group,
       as: as,
       dispose: dispose,
     );

@@ -66,14 +66,15 @@ abstract class ModuleParser {
 
         final source = ModuleSource.fromAnnotation(
           moduleId: id,
-          parameter: result.dependencies,
+          parameter: result.parameters,
           type: resolveDartType(libraries, result.type),
           annotation: result.annotation,
           access: result.access,
         );
         final node = Node.fromTypes(
           libraries: libraries,
-          dependencies: result.dependencies,
+          parameters: result.parameters,
+          groups: result.annotation.groups,
           type: result.type,
           source: source,
         );

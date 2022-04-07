@@ -14,13 +14,13 @@ class ModuleAccess {
 
 class _ModuleVisitorResult {
   final AnnotationParserResult annotation;
-  final List<ParameterParserResult> dependencies;
+  final List<ParameterParserResult> parameters;
   final ModuleAccess access;
   final DartType type;
 
   _ModuleVisitorResult({
     required this.annotation,
-    required this.dependencies,
+    required this.parameters,
     required this.access,
     required this.type,
   });
@@ -43,7 +43,7 @@ class _ModuleVisitor extends SimpleElementVisitor<void> {
     if (annotation != null) {
       final result = _ModuleVisitorResult(
         annotation: AnnotationParser.parse(libraries, sourceType, annotation),
-        dependencies: dependencies.map((dependency) => ParameterParser.parse(libraries, dependency)).toList(),
+        parameters: dependencies.map((dependency) => ParameterParser.parse(libraries, dependency)).toList(),
         access: access,
         type: sourceType,
       );

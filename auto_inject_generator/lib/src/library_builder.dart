@@ -73,8 +73,33 @@ class AutoInjectLibraryBuilder {
 
         dependencies[env]!.add(Node.fromTypes(
           libraries: libraries,
-          dependencies: [],
+          parameters: [],
+          groups: [],
           type: result.type,
+          source: source,
+        ));
+      }
+    }
+  }
+
+  void parseGroups() {
+    for (final env in dependencies.keys) {
+      final envDependencies = dependencies[env]!;
+      final groups = envDependencies.map((e) => e.groups).flattened.toSet();
+
+      for (final group in groups) {
+        final source = GroupSource(
+          groupType: resolveDartType(libraries, group.type),
+          members: envDependencies.where((e) => e.groupIds.contains(group.id)).map((e) => e.source.type).toList(),
+          env: env,
+          id: group.id,
+        );
+
+        envDependencies.add(Node(
+          nodeId: Object.hash(group.id, 'Group'),
+          groups: [],
+          dependencies: [],
+          groupDependencies: [],
           source: source,
         ));
       }
