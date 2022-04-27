@@ -12,6 +12,7 @@ class AutoInjectLibraryBuilder {
   static final _initEnvName = 'environment';
 
   static final _moduleTypeChecker = TypeChecker.fromRuntime(Module);
+  static final _testModuleTypeChecker = TypeChecker.fromRuntime(TestModule);
   static final _factoryTypeChecker = TypeChecker.fromRuntime(AssistedFactory);
 
   final LibraryBuilder libraryBuilder;
@@ -21,14 +22,17 @@ class AutoInjectLibraryBuilder {
   final Map<String, List<Node>> dependencies;
   final Map<String, List<Node>> assistedDependencies;
 
-  late final MethodBuilder initMethodBuilder;
+  final List<ModuleParserResult> modules;
+  final List<TestModuleParserResult> testModules;
 
   AutoInjectLibraryBuilder({
     required this.libraryBuilder,
     required this.reader,
     required this.libraries,
   })  : dependencies = {},
-        assistedDependencies = {};
+        assistedDependencies = {},
+        modules = [],
+        testModules = [];
 
   Iterable<AnnotatedElement> _annotatedWith(TypeChecker checker) =>
       reader.map((e) => e.annotatedWith(checker)).flattened;
@@ -48,19 +52,24 @@ class AutoInjectLibraryBuilder {
   void parseModules() {
     for (final moduleElement in _annotatedWith(_moduleTypeChecker)) {
       final result = ModuleParser.parse(libraries, moduleElement);
-      final className = moduleClassNameFromId(result.id);
-      final instanceName = moduleInstanceNameFromId(result.id);
+      modules.add(result);
 
-      final moduleClass = Class(
+      libraryBuilder.body.add(Class(
         (builder) => builder
-          ..name = className
+          ..name = moduleClassNameFromId(result.id)
           ..extend = result.reference,
-      );
-      final moduleInstance = refer(className).newInstance([]).assignFinal(instanceName).statement;
-
-      libraryBuilder.body.addAll([moduleClass, moduleInstance]);
+      ));
 
       _addDependencies(result.dependencies);
+    }
+  }
+
+  void parseTestModules(String testEnv) {
+    for (final moduleElement in _annotatedWith(_testModuleTypeChecker)) {
+      final result = TestModuleParser.parse(libraries, moduleElement, testEnv);
+      testModules.add(result);
+
+      _addDependencies({testEnv: result.dependencies});
     }
   }
 
@@ -114,7 +123,7 @@ class AutoInjectLibraryBuilder {
     }
   }
 
-  void buildEnv(String env) {
+  void _buildEnv(String env, MethodBuilder builder, Iterable<Code> modules) {
     final dependencies = this.dependencies[env]!;
     for (final dependency in dependencies) {
       libraryBuilder.body.addAll(dependency.source.createGlobal(dependencies.whereNot((e) => e == dependency)));
@@ -122,41 +131,84 @@ class AutoInjectLibraryBuilder {
 
     final sortedDependencies = topologicalSort(dependencies, env);
 
-    libraryBuilder.body.add(Method(
-      (builder) => builder
-        ..name = getBuildFunctionNameFromEnv(env)
-        ..requiredParameters.add(Parameter((builder) => builder
-          ..name = _getItInstanceName
-          ..type = getItReference()))
-        ..returns = refer('void')
-        ..body = Block.of(sortedDependencies
-            .where((e) => e.source.canSupply)
-            .map((e) => e.source.create(refer(_getItInstanceName)).statement)),
-    ));
+    builder.name = getBuildFunctionNameFromEnv(env);
+    builder.returns = refer('void');
+
+    builder.requiredParameters.add(
+      Parameter((builder) => builder
+        ..name = _getItInstanceName
+        ..type = getItReference()),
+    );
+    builder.body = Block.of([
+      ...modules,
+      ...sortedDependencies
+          .where((e) => e.source.canSupply)
+          .map((e) => e.source.create(refer(_getItInstanceName)).statement),
+    ]);
   }
 
-  void buildInitMethod() {
+  void buildEnv(String env) {
+    final modulesInstances = modules.map(
+      (e) => refer(moduleClassNameFromId(e.id)).newInstance([]).assignFinal(moduleInstanceNameFromId(e.id)).statement,
+    );
+
+    libraryBuilder.body.add(Method((builder) => _buildEnv(env, builder, modulesInstances)));
+  }
+
+  void buildTestEnv(String env) {
+    final modulesInstances = [
+      ...modules.map(
+        (e) => refer(moduleClassNameFromId(e.id)).newInstance([]).assignFinal(moduleInstanceNameFromId(e.id)).statement,
+      ),
+      ...testModules.map(
+        (e) => refer(e.name).assignFinal(e.moduleName).statement,
+      ),
+    ];
+
+    libraryBuilder.body.add(Method((builder) {
+      _buildEnv(env, builder, modulesInstances);
+
+      builder.optionalParameters.addAll(
+        testModules.map((e) => Parameter((builder) => TestModuleParser.buildEnvMethodParameter(builder, e))),
+      );
+    }));
+  }
+
+  void buildInitMethod(String? testEnv) {
     libraryBuilder.body.add(Method((builder) => builder
       ..name = _initMethodName
-      ..requiredParameters.addAll([
-        Parameter((builder) => builder
-          ..name = _initGetItName
-          ..type = getItReference()),
-      ])
-      ..optionalParameters.addAll([
-        Parameter((builder) => builder
-          ..name = _initEnvName
-          ..type = refer('String')
-          ..named = true
-          ..required = true),
-      ])
+      ..requiredParameters.add(
+        Parameter(
+          (builder) => builder
+            ..name = _initGetItName
+            ..type = getItReference(),
+        ),
+      )
+      ..optionalParameters.add(
+        Parameter(
+          (builder) => builder
+            ..name = _initEnvName
+            ..type = refer('String')
+            ..named = true
+            ..required = true,
+        ),
+      )
+      ..optionalParameters.addAll(
+        testModules.map((e) => Parameter((builder) => TestModuleParser.buildInitMethodParameter(builder, e))),
+      )
       ..returns = refer('void')
       ..body = Block.of([
         Code('switch ($_initEnvName) {'),
         for (final env in dependencies.keys)
           Block.of([
             Code('case \'$env\':'),
-            refer(getBuildFunctionNameFromEnv(env)).call([refer(_initGetItName)]).statement,
+            if (env == testEnv)
+              refer(getBuildFunctionNameFromEnv(env)).call(
+                [refer(_initGetItName)],
+                TestModuleParser.callEnvMethodArgument(testModules),
+              ).statement
+            else
+              refer(getBuildFunctionNameFromEnv(env)).call([refer(_initGetItName)]).statement,
             Code('break;'),
           ]),
         const Code('}'),

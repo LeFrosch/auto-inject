@@ -1,6 +1,6 @@
 part of 'dependency_source.dart';
 
-String moduleInstanceNameFromId(int id) => '_module$id';
+String moduleInstanceNameFromId(int id) => 'module$id';
 String moduleClassNameFromId(int id) => '_Module$id';
 
 abstract class ModuleSource extends DependencySource {

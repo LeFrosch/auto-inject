@@ -5,5 +5,11 @@ abstract class GroupProvider<T> {
 }
 
 extension GroupProviderExtension on GetIt {
-  Iterable<T> getGroup<T extends Object>() => get<GroupProvider<T>>().call();
+  Iterable<T> getGroup<T extends Object>() {
+    if (isRegistered<GroupProvider<T>>()) {
+      return get<GroupProvider<T>>().call();
+    } else {
+      return const [];
+    }
+  }
 }

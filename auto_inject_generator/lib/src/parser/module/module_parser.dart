@@ -6,10 +6,12 @@ import 'package:auto_inject_generator/src/dependency_graph/sources/dependency_so
 import 'package:auto_inject_generator/src/parser/annotation_parser.dart';
 import 'package:auto_inject_generator/src/parser/parameter_parser.dart';
 import 'package:auto_inject_generator/src/parser/utils.dart';
+import 'package:build/build.dart';
 import 'package:code_builder/code_builder.dart';
 import 'package:source_gen/source_gen.dart';
 
 part 'module_parser_visitor.dart';
+part 'test_module_parser.dart';
 
 class ModuleParserResult {
   final int id;

@@ -27,3 +27,7 @@ dev_dependencies:
   lints: ^1.0.1
   test: ^1.17.12
 
+dependency_overrides:
+  auto_inject:
+    path: ../auto_inject
+

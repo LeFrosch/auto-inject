@@ -26,8 +26,8 @@ class ParameterParserResult {
 }
 
 abstract class ParameterParser {
-  static final _assistedAnnotation = TypeChecker.fromRuntime(Assisted);
-  static final _groupAnnotation = TypeChecker.fromRuntime(Group);
+  static final _assistedAnnotation = TypeChecker.fromRuntime(AssistedField);
+  static final _groupAnnotation = TypeChecker.fromRuntime(GroupField);
   static final _iterableAnnotation = TypeChecker.fromRuntime(Iterable);
 
   static final _defaultDependencies = [

@@ -4,7 +4,7 @@ import 'package:source_gen/source_gen.dart';
 
 Builder autoInjectBuilder(BuilderOptions options) {
   return LibraryBuilder(
-    AutoInjectLibraryGenerator(),
+    AutoInjectLibraryGenerator(testEnv: options.config['test_env']),
     generatedExtension: '.auto.dart',
   );
 }

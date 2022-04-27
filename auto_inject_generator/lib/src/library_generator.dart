@@ -18,7 +18,11 @@ import 'package:source_gen/source_gen.dart' hide LibraryBuilder;
 part 'library_builder.dart';
 
 class AutoInjectLibraryGenerator implements Generator {
-  static final _allFilesGlob = Glob("**.dart");
+  final String? testEnv;
+
+  static final _allFilesGlob = Glob("lib/**.dart");
+
+  AutoInjectLibraryGenerator({required this.testEnv});
 
   Future<LibraryElement?> _libraryFromAsset(AssetId assetId, Resolver resolver) async {
     try {
@@ -28,14 +32,18 @@ class AutoInjectLibraryGenerator implements Generator {
     }
   }
 
-  @override
-  FutureOr<String?> generate(LibraryReader _, BuildStep buildStep) async {
-    final reader = await buildStep
-        .findAssets(_allFilesGlob)
+  Future<List<LibraryReader>> _readerFromGlob(BuildStep buildStep, Glob glob) {
+    return buildStep
+        .findAssets(glob)
         .asyncMap((file) async => await _libraryFromAsset(file, buildStep.resolver))
         .where((library) => library != null)
         .map((library) => LibraryReader(library!))
         .toList();
+  }
+
+  @override
+  FutureOr<String?> generate(LibraryReader _, BuildStep buildStep) async {
+    final reader = await _readerFromGlob(buildStep, _allFilesGlob);
 
     final libraries = await buildStep.resolver.libraries.toList();
 
@@ -49,15 +57,23 @@ class AutoInjectLibraryGenerator implements Generator {
       builder.parseModules();
       builder.parseClasses();
       builder.parseFactories();
-      builder.parseGroups();
 
-      for (final env in builder.dependencies.keys) {
+      final testEnv = this.testEnv;
+      if (testEnv != null) {
+        builder.parseTestModules(testEnv);
+        builder.parseGroups();
+        builder.buildTestEnv(testEnv);
+      } else {
+        builder.parseGroups();
+      }
+
+      for (final env in builder.dependencies.keys.whereNot((e) => e == testEnv)) {
         builder.buildEnv(env);
       }
 
-      builder.buildInitMethod();
+      builder.buildInitMethod(testEnv);
     });
 
-    return library.accept(DartEmitter.scoped()).toString();
+    return library.accept(DartEmitter.scoped(useNullSafetySyntax: true)).toString();
   }
 }

@@ -29,6 +29,12 @@ class Module {
 
 const module = Module._();
 
+class TestModule {
+  final String name;
+
+  const TestModule(this.name);
+}
+
 class AssistedFactory {
   const AssistedFactory._();
 }
@@ -41,16 +47,16 @@ class DisposeMethod {
 
 const disposeMethod = DisposeMethod._();
 
-class Assisted {
+class AssistedField {
   final String? name;
 
-  const Assisted([this.name]);
+  const AssistedField([this.name]);
 }
 
-const assisted = Assisted();
+const assistedField = AssistedField();
 
-class Group {
-  const Group._();
+class GroupField {
+  const GroupField._();
 }
 
-const group = Group._();
+const groupField = GroupField._();
