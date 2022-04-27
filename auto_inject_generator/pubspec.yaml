@@ -2,7 +2,7 @@ name: auto_inject_generator
 description: Code generation for get it.
 homepage: https://github.com/LeFrosch/auto-inject
 
-version: '0.0.3'
+version: '0.0.4'
 
 publish_to: none
 
@@ -26,8 +26,4 @@ dev_dependencies:
   build_runner: ^2.1.2
   lints: ^1.0.1
   test: ^1.17.12
-
-dependency_overrides:
-  auto_inject:
-    path: ../auto_inject
 
